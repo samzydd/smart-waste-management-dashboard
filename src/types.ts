@@ -48,3 +48,17 @@ export interface BinRecord {
   departure: string
   eta: string
 }
+
+export type TruckCardStatus = 'in-field' | 'idle' | 'maintenance' | 'offline'
+
+export interface TruckCard {
+  id: string
+  tag: string
+  status: TruckCardStatus
+  capacityVol: string
+  lastKnownLocation: string
+  odometer: string
+  driverName: string
+  driverAvatar: string
+  photo: string
+}

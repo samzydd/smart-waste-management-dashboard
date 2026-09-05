@@ -1,4 +1,4 @@
-import type { Bin, BinFillReport, BinRecord, Delivery, Truck } from '../types'
+import type { Bin, BinFillReport, BinRecord, Delivery, Truck, TruckCard, TruckCardStatus } from '../types'
 
 const CENTER: [number, number] = [38.8339, -104.8214]
 
@@ -138,6 +138,40 @@ export const binRecords: BinRecord[] = Array.from({ length: 40 }, (_, i) => {
     truckAssigned: truckTag,
     departure: `12 Oct, ${(8 + i) % 12 || 12}:${(i * 7) % 60 < 10 ? '0' : ''}${(i * 7) % 60} ${8 + i < 12 ? 'AM' : 'PM'}`,
     eta: `12 Oct, ${(13 + i) % 12 || 12}:${(i * 11) % 60 < 10 ? '0' : ''}${(i * 11) % 60} PM`,
+  }
+})
+
+const TRUCK_STATUSES: TruckCardStatus[] = ['in-field', 'idle', 'maintenance', 'offline', 'in-field', 'in-field']
+
+const DRIVER_NAMES = [
+  'Floyd Miles',
+  'Ralph Edwards',
+  'Kaka Howard',
+  'Devon Lane',
+  'Theresa Webb',
+  'Jenny Wilson',
+  'Cody Fisher',
+  'Esther Howard',
+  'Wade Warren',
+  'Leslie Alexander',
+]
+
+const CAPACITIES = ['12 yd³', '14 yd³', '16 yd³', '17 yd³']
+
+export const truckCards: TruckCard[] = Array.from({ length: 16 }, (_, i) => {
+  const tagPrefix = ['RES-12 • TAX-1234', 'RES-Ab • OMO-2234', 'RES-32 • TAX-3455', 'RES-62 • VDS-1345', 'RES-91 • KKQ-5432'][
+    i % 5
+  ]
+  return {
+    id: `truck-card-${i + 1}`,
+    tag: tagPrefix,
+    status: TRUCK_STATUSES[i % TRUCK_STATUSES.length],
+    capacityVol: CAPACITIES[i % CAPACITIES.length],
+    lastKnownLocation: `${1000 + ((i * 733) % 8000)} ${STREETS[(i + 3) % STREETS.length]} ${CITIES[(i + 2) % CITIES.length]} ${10000 + ((i * 4211) % 89999)}`,
+    odometer: `${(123 + i * 3).toLocaleString()},458 km`,
+    driverName: DRIVER_NAMES[i % DRIVER_NAMES.length],
+    driverAvatar: `https://i.pravatar.cc/64?img=${(i % 70) + 1}`,
+    photo: `https://picsum.photos/seed/truck-${i + 1}/200/200`,
   }
 })
 

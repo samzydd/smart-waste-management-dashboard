@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Overview } from './pages/Overview'
 import { BinStatus } from './pages/BinStatus'
+import { Trucks } from './pages/Trucks'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
 function App() {
@@ -9,15 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Overview />} />
         <Route path="/bin-status" element={<BinStatus />} />
-        <Route
-          path="/trucks"
-          element={
-            <PlaceholderPage
-              title="Trucks"
-              description="Live fleet positions, active routes, and collection progress."
-            />
-          }
-        />
+        <Route path="/trucks" element={<Trucks />} />
         <Route
           path="/recycle-house"
           element={

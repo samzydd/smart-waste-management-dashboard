@@ -1,5 +1,5 @@
 import type { ComponentType, SVGProps } from 'react'
-import { Squares2X2Icon, PlusIcon } from '@heroicons/react/24/solid'
+import { Squares2X2Icon, PlusIcon, TruckIcon } from '@heroicons/react/24/solid'
 import { OverviewKeyIcon, TrashBinIcon } from '../icons'
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
 const TITLE_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   Overview: OverviewKeyIcon,
   'Bin status': TrashBinIcon,
+  Trucks: TruckIcon,
 }
 
 export function Header({ title, action }: HeaderProps) {
