@@ -33,7 +33,7 @@ export function BinMetricsRow() {
             </div>
           </div>
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-bg">
-            <Icon className="size-5 text-accent" />
+            <Icon className="size-5 text-[#747474]" />
           </div>
         </div>
       ))}

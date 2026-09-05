@@ -78,31 +78,63 @@ export const deliveries: Delivery[] = [
   },
 ]
 
-const AREAS = [
-  '2464 Royal Ln. Mesa, New Jersey 45463',
-  '3891 Ranchview Dr. Richardson, California 62639',
-  '2972 Westheimer Rd. Santa Ana, Illinois 85486',
-  '1901 Thornridge Cir. Shiloh, Hawaii 81063',
-  '3517 W. Gray St. Utica, Pennsylvania 57867',
-  '2715 Ash Dr. San Jose, South Dakota 83475',
-  '6391 Elgin St. Celina, Delaware 10299',
-  '4140 Parker Rd. Allentown, New Mexico 31134',
-  '2118 Thornridge Cir. Syracuse, Connecticut 35624',
-  '4517 Washington Ave. Manchester, Kentucky 39495',
-  '8502 Preston Rd. Inglewood, Maine 98380',
-  '3605 Parker Rd. Fresno, Ohio 20194',
+const STREETS = [
+  'Royal Ln.',
+  'Ranchview Dr.',
+  'Westheimer Rd.',
+  'Thornridge Cir.',
+  'W. Gray St.',
+  'Ash Dr.',
+  'Elgin St.',
+  'Parker Rd.',
+  'Washington Ave.',
+  'Preston Rd.',
+  'Cedar Grove Ln.',
+  'Maple Leaf Ct.',
+  'Sunset Blvd.',
+  'Lakeview Dr.',
+  'Birchwood Ave.',
+  'Harborview St.',
+  'Meadowbrook Ln.',
+  'Fairview Rd.',
+  'Hillcrest Ave.',
+  'Riverside Dr.',
+]
+
+const CITIES = [
+  'Mesa, New Jersey',
+  'Richardson, California',
+  'Santa Ana, Illinois',
+  'Shiloh, Hawaii',
+  'Utica, Pennsylvania',
+  'San Jose, South Dakota',
+  'Celina, Delaware',
+  'Allentown, New Mexico',
+  'Syracuse, Connecticut',
+  'Manchester, Kentucky',
+  'Inglewood, Maine',
+  'Fresno, Ohio',
+  'Bristol, Vermont',
+  'Salem, Oregon',
+  'Dover, Georgia',
+  'Franklin, Texas',
 ]
 
 const REPORTS: BinFillReport[] = ['filled', 'filled', 'almost-filled', 'almost-filled', 'emptied', 'emptied', 'in-progress']
 
-export const binRecords: BinRecord[] = AREAS.map((area, i) => {
+export const binRecords: BinRecord[] = Array.from({ length: 40 }, (_, i) => {
+  const streetNo = 1000 + ((i * 733) % 8000)
+  const street = STREETS[i % STREETS.length]
+  const city = CITIES[i % CITIES.length]
+  const zip = 10000 + ((i * 4211) % 89999)
+  const area = `${streetNo} ${street} ${city} ${zip}`
   const report = REPORTS[i % REPORTS.length]
   const truckTag = `RES-${(i * 7 + 12) % 99} • TAX-${1000 + i * 111}`
   return {
     id: `bin-record-${i + 1}`,
     area,
     report,
-    estWeight: i === 1 ? 'TBD' : '12 ton',
+    estWeight: i % 9 === 1 ? 'TBD' : '12 ton',
     truckAssigned: truckTag,
     departure: `12 Oct, ${(8 + i) % 12 || 12}:${(i * 7) % 60 < 10 ? '0' : ''}${(i * 7) % 60} ${8 + i < 12 ? 'AM' : 'PM'}`,
     eta: `12 Oct, ${(13 + i) % 12 || 12}:${(i * 11) % 60 < 10 ? '0' : ''}${(i * 11) % 60} PM`,

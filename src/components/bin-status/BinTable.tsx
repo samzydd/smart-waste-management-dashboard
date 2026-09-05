@@ -47,12 +47,10 @@ export function BinTable() {
         ))}
       </div>
 
-      {binRecords.map((record, i) => (
+      {binRecords.map((record) => (
         <div
           key={record.id}
-          className={`flex w-full items-center justify-between border-t border-border transition-colors hover:bg-[#171717] ${
-            i % 5 === 2 ? 'bg-bg-raised' : ''
-          }`}
+          className="flex w-full items-center justify-between border-t border-border bg-bg transition-colors hover:bg-[#171717]"
         >
           <div className="flex h-[54px] w-[330px] items-center pl-4 pr-3 py-1.5">
             <p className="truncate text-sm text-text-body">{record.area}</p>
