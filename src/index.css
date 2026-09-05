@@ -106,3 +106,8 @@ body {
 .dark-daypicker .rdp-nav button:hover {
   background: rgba(255, 255, 255, 0.08);
 }
+
+.dark-daypicker .rdp-months {
+  flex-wrap: nowrap;
+  flex-direction: row;
+}

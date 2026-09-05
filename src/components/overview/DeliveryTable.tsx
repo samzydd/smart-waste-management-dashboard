@@ -53,7 +53,10 @@ export function DeliveryTable() {
       </div>
 
       {deliveries.map((d) => (
-        <div key={d.orderNo} className="flex w-full items-center justify-between border-b border-border">
+        <div
+          key={d.orderNo}
+          className="flex w-full items-center justify-between border-b border-border transition-colors hover:bg-[#171717]"
+        >
           <div className="flex h-[54px] w-[200px] items-center py-1.5 pl-4 pr-3">
             <p className="whitespace-nowrap text-sm text-text-body">{d.orderNo}</p>
           </div>

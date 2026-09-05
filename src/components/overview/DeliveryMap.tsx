@@ -114,18 +114,50 @@ function truckDivIcon(heading: number, status: string) {
   })
 }
 
+// Trackpad pinch shows up differently per browser engine: Chrome/Firefox
+// emulate it as `wheel` events with `ctrlKey: true`, while Safari fires the
+// non-standard `gesturestart`/`gesturechange`/`gestureend` events instead.
+// We handle both so pinch-to-zoom works everywhere, while a plain two-finger
+// scroll (no ctrlKey) is left alone and never zooms the map.
 function PinchOnlyZoom() {
   const map = useMap()
   useEffect(() => {
     const container = map.getContainer()
+    let gestureStartZoom = map.getZoom()
+
     function onWheel(e: WheelEvent) {
       if (!e.ctrlKey) return
       e.preventDefault()
-      const nextZoom = map.getZoom() - e.deltaY * 0.015
+      const nextZoom = map.getZoom() - e.deltaY * 0.03
       map.setZoom(nextZoom, { animate: false })
     }
+
+    function onGestureStart(e: Event) {
+      e.preventDefault()
+      gestureStartZoom = map.getZoom()
+    }
+
+    function onGestureChange(e: Event) {
+      e.preventDefault()
+      const scale = (e as unknown as { scale: number }).scale
+      map.setZoom(gestureStartZoom + Math.log2(scale), { animate: false })
+    }
+
+    function onGestureEnd(e: Event) {
+      e.preventDefault()
+    }
+
     container.addEventListener('wheel', onWheel, { passive: false })
-    return () => container.removeEventListener('wheel', onWheel)
+    container.addEventListener('gesturestart', onGestureStart as EventListener)
+    container.addEventListener('gesturechange', onGestureChange as EventListener)
+    container.addEventListener('gestureend', onGestureEnd as EventListener)
+
+    return () => {
+      container.removeEventListener('wheel', onWheel)
+      container.removeEventListener('gesturestart', onGestureStart as EventListener)
+      container.removeEventListener('gesturechange', onGestureChange as EventListener)
+      container.removeEventListener('gestureend', onGestureEnd as EventListener)
+    }
   }, [map])
   return null
 }

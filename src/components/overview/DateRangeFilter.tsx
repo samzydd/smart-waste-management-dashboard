@@ -107,7 +107,7 @@ export function DateRangeFilter() {
           <ChevronDown size={20} />
         </button>
         {calendarOpen && (
-          <div className="dark-daypicker absolute right-0 top-full z-[600] mt-2 rounded-lg border border-border bg-bg-raised p-2 shadow-xl">
+          <div className="dark-daypicker absolute left-0 top-full z-[600] mt-2 w-max rounded-lg border border-border bg-bg-raised p-2 shadow-xl">
             <DayPicker
               mode="range"
               selected={range}
