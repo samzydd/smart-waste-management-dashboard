@@ -10,10 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/plus-jakarta-sans": "^5.3.0",
+    "@fontsource/open-runde": "^5.3.0",
+    "@heroicons/react": "^2.2.0",
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
-    "lucide-react": "^1.41.0",
     "react": "^19.2.8",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.8",

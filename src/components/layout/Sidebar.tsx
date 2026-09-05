@@ -1,32 +1,31 @@
+import { TruckIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid'
+import { ChevronDownIcon as ChevronDownOutlineIcon } from '@heroicons/react/24/outline'
 import {
-  LayoutDashboard,
-  Trash2,
-  Truck,
-  Recycle,
-  HardDrive,
-  FileText,
-  MessageSquare,
-  Bell,
-  Settings,
-  ChevronDown,
-  Search,
-} from 'lucide-react'
+  OverviewKeyIcon,
+  TrashBinIcon,
+  BinRecycleIcon,
+  DeviceSsdIcon,
+  FileFilledIcon,
+  MessageSolidIcon,
+  NotificationSolidIcon,
+  GearFillIcon,
+} from '../icons'
 import { NavLink } from 'react-router-dom'
 import clsx from 'clsx'
 
 const primaryNav = [
-  { to: '/', label: 'Overview', icon: LayoutDashboard },
-  { to: '/bin-status', label: 'Bin status', icon: Trash2 },
-  { to: '/trucks', label: 'Trucks', icon: Truck },
-  { to: '/recycle-house', label: 'Recycle house', icon: Recycle },
-  { to: '/iot-devices', label: 'IoT device manager', icon: HardDrive },
-  { to: '/report', label: 'Report', icon: FileText },
+  { to: '/', label: 'Overview', icon: OverviewKeyIcon },
+  { to: '/bin-status', label: 'Bin status', icon: TrashBinIcon },
+  { to: '/trucks', label: 'Trucks', icon: TruckIcon },
+  { to: '/recycle-house', label: 'Recycle house', icon: BinRecycleIcon },
+  { to: '/iot-devices', label: 'IoT device manager', icon: DeviceSsdIcon },
+  { to: '/report', label: 'Report', icon: FileFilledIcon },
 ]
 
 const secondaryNav = [
-  { to: '/messages', label: 'Messages', icon: MessageSquare },
-  { to: '/notifications', label: 'Notifications', icon: Bell },
-  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/messages', label: 'Messages', icon: MessageSolidIcon },
+  { to: '/notifications', label: 'Notifications', icon: NotificationSolidIcon },
+  { to: '/settings', label: 'Settings', icon: GearFillIcon },
 ]
 
 export function Sidebar() {
@@ -43,13 +42,17 @@ export function Sidebar() {
             </div>
             <p className="whitespace-nowrap text-sm font-medium text-text-primary">Waste delivery</p>
           </div>
-          <ChevronDown size={16} className="text-text-tertiary" />
+          <ChevronDownIcon className="size-4 text-text-tertiary" />
         </div>
         <div className="flex w-full items-center border-b border-border p-5">
-          <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-border-strong bg-black p-3">
-            <Search size={16} className="text-text-tertiary" />
-            <span className="text-sm text-text-tertiary">Search all pages</span>
-          </div>
+          <label className="flex h-9 w-full items-center gap-2 rounded-lg border border-border-strong bg-black p-3 focus-within:border-accent">
+            <MagnifyingGlassIcon className="size-4 shrink-0 text-text-tertiary" />
+            <input
+              type="text"
+              placeholder="Search all pages"
+              className="w-full min-w-0 bg-transparent text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none"
+            />
+          </label>
         </div>
       </div>
 
@@ -69,7 +72,7 @@ export function Sidebar() {
                 )
               }
             >
-              <Icon size={16} />
+              <Icon className="size-4 shrink-0" />
               <span className="truncate">{label}</span>
             </NavLink>
           ))}
@@ -88,7 +91,7 @@ export function Sidebar() {
                   )
                 }
               >
-                <Icon size={16} />
+                <Icon className="size-4 shrink-0" />
                 <span className="flex-1 truncate">{label}</span>
               </NavLink>
             ))}
@@ -102,7 +105,7 @@ export function Sidebar() {
                 <p className="w-[110px] truncate text-[11px] text-text-tertiary">johndoe@gmail.com</p>
               </div>
             </div>
-            <ChevronDown size={16} className="shrink-0 text-text-tertiary" />
+            <ChevronDownOutlineIcon className="size-4 shrink-0 text-text-tertiary" />
           </button>
         </div>
       </div>

@@ -13,9 +13,14 @@ export function ValuableWasteCard() {
             {wasteBreakdown.map((w) => (
               <div
                 key={w.label}
-                className="h-10 rounded-lg"
+                className="group relative h-10 rounded-lg transition-[filter] hover:brightness-110"
                 style={{ backgroundColor: w.color, flex: w.label === 'Metal' ? '1 0 0' : `0 0 ${w.pct * 3.9}px` }}
-              />
+              >
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-bg-raised px-2 py-1 text-xs text-text-primary opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                  {w.label} · {w.pct}%
+                  <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-bg-raised" />
+                </div>
+              </div>
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-4">

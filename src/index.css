@@ -1,11 +1,11 @@
 @import 'tailwindcss';
-@import '@fontsource/plus-jakarta-sans/400.css';
-@import '@fontsource/plus-jakarta-sans/500.css';
-@import '@fontsource/plus-jakarta-sans/600.css';
-@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource/open-runde/400.css';
+@import '@fontsource/open-runde/500.css';
+@import '@fontsource/open-runde/600.css';
+@import '@fontsource/open-runde/700.css';
 
 @theme {
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans: 'Open Runde', system-ui, sans-serif;
 
   --color-bg: #111111;
   --color-bg-raised: #1a1a1a;
@@ -110,4 +110,18 @@ body {
 .dark-daypicker .rdp-months {
   flex-wrap: nowrap;
   flex-direction: row;
+}
+
+.truck-pulse-icon {
+  animation: truck-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes truck-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
 }

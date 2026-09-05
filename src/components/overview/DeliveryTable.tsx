@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDownIcon } from '@heroicons/react/24/solid'
 import { deliveries } from '../../data/mock'
 import type { Delivery } from '../../types'
 
@@ -30,7 +30,7 @@ function FilterPill({ label }: { label: string }) {
       <span className="text-sm text-text-secondary">{label}</span>
       <button className="flex items-center gap-2 rounded-lg border border-border bg-bg px-2 py-1 text-sm text-white">
         {label === 'Sort by' ? 'Status' : 'All'}
-        <ChevronDown size={16} />
+        <ChevronDownIcon className="size-4" />
       </button>
     </div>
   )

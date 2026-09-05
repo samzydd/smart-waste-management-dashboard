@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { ZoomIn, ZoomOut, Truck as TruckIcon } from 'lucide-react'
+import { MagnifyingGlassPlusIcon, MagnifyingGlassMinusIcon, TruckIcon } from '@heroicons/react/24/solid'
 import { bins, trucks, mapCenter } from '../../data/mock'
 import 'leaflet/dist/leaflet.css'
 
@@ -32,8 +32,9 @@ const TRUCK_WAYPOINTS: [LatLng, LatLng][] = [
   ],
 ]
 
-// City-driving pace, slowed 60% from the original ~6.2 m/s pass.
-const TRUCK_SPEED_MPS = 2.5
+// City-driving pace: slowed 60% from the original ~6.2 m/s pass, then
+// sped back up 20%, then another 30% from there.
+const TRUCK_SPEED_MPS = 2.5 * 1.2 * 1.3
 
 async function fetchRoadRoute([a, b]: [LatLng, LatLng]): Promise<LatLng[] | null> {
   const coords = `${a[1]},${a[0]};${b[1]},${b[0]}`
@@ -96,21 +97,23 @@ function useElapsedSeconds(intervalMs: number) {
   return elapsed
 }
 
+// truck.svg already bundles both the vehicle glyph and a soft radial glow
+// behind it, so it serves as the truck's icon and its "radial" in one asset.
+const TRUCK_ICON_SIZE = 128
+
 function truckDivIcon(heading: number, status: string) {
-  const color = status === 'collecting' ? '#02e6ff' : status === 'en-route' ? '#ffc710' : '#c9c9c9'
+  const badgeColor = status === 'collecting' ? '#02e6ff' : status === 'en-route' ? '#ffc710' : '#c9c9c9'
   return L.divIcon({
     className: '',
     html: `
-      <div style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; transform: rotate(${heading}deg); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.55));">
-        <svg width="22" height="30" viewBox="0 0 22 30" xmlns="http://www.w3.org/2000/svg">
-          <rect x="1" y="10.5" width="20" height="18.5" rx="3" fill="${color}" stroke="#0b0b0b" stroke-width="1.2" />
-          <rect x="4" y="14" width="14" height="6.5" rx="1.4" fill="#0b0b0b" opacity="0.28" />
-          <path d="M2.5 10.5 L11 1 L19.5 10.5 Z" fill="${color}" stroke="#0b0b0b" stroke-width="1.2" stroke-linejoin="round" />
-          <path d="M6.3 8.6 L11 3.7 L15.7 8.6 Z" fill="#0b0b0b" opacity="0.32" />
-        </svg>
+      <div class="truck-pulse-icon" style="position:relative; width:${TRUCK_ICON_SIZE}px; height:${TRUCK_ICON_SIZE}px;">
+        <div style="width:100%; height:100%; transform: rotate(${heading}deg); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+          <img src="/truck.svg" width="${TRUCK_ICON_SIZE}" height="${TRUCK_ICON_SIZE}" style="display:block; width:100%; height:100%;" />
+        </div>
+        <span style="position:absolute; right:6px; bottom:6px; width:10px; height:10px; border-radius:9999px; background:${badgeColor}; border:2px solid #0b0b0b;"></span>
       </div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    iconSize: [TRUCK_ICON_SIZE, TRUCK_ICON_SIZE],
+    iconAnchor: [TRUCK_ICON_SIZE / 2, TRUCK_ICON_SIZE / 2],
   })
 }
 
@@ -178,13 +181,13 @@ function ZoomControls() {
         onClick={() => map.zoomIn()}
         className="flex size-7 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
       >
-        <ZoomIn size={16} />
+        <MagnifyingGlassPlusIcon className="size-4" />
       </button>
       <button
         onClick={() => map.zoomOut()}
         className="flex size-7 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
       >
-        <ZoomOut size={16} />
+        <MagnifyingGlassMinusIcon className="size-4" />
       </button>
     </div>
   )
@@ -326,7 +329,7 @@ export function DeliveryMap() {
               <Marker position={position} icon={truckDivIcon(heading, truck.status)}>
                 <Popup>
                   <strong className="flex items-center gap-1">
-                    <TruckIcon size={12} /> {truck.label}
+                    <TruckIcon className="size-3" /> {truck.label}
                   </strong>
                   <br />
                   Status: {truck.status}
