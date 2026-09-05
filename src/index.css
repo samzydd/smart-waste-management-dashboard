@@ -65,3 +65,44 @@ body {
   background: #151515 !important;
   font-family: var(--font-sans);
 }
+
+.dark-daypicker .rdp-root {
+  --rdp-accent-color: var(--color-accent);
+  --rdp-accent-background-color: var(--color-accent-bg);
+  --rdp-day-height: 36px;
+  --rdp-day-width: 36px;
+  --rdp-selected-color: #04262a;
+  color: var(--color-text-body);
+}
+
+.dark-daypicker .rdp-month_caption {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.dark-daypicker .rdp-weekday {
+  color: var(--color-text-muted);
+}
+
+.dark-daypicker .rdp-day_button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark-daypicker .rdp-selected .rdp-day_button {
+  background: var(--color-accent);
+  color: #04262a;
+  font-weight: 600;
+}
+
+.dark-daypicker .rdp-range_middle .rdp-day_button {
+  background: var(--color-accent-bg);
+  color: var(--color-accent-soft);
+}
+
+.dark-daypicker .rdp-chevron {
+  fill: var(--color-text-secondary);
+}
+
+.dark-daypicker .rdp-nav button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}

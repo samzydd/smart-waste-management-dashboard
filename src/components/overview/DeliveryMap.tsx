@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Circle } from 'react-leaflet'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { ZoomIn, ZoomOut, Truck as TruckIcon } from 'lucide-react'
 import { bins, trucks, mapCenter } from '../../data/mock'
@@ -7,54 +7,79 @@ import 'leaflet/dist/leaflet.css'
 
 type LatLng = [number, number]
 
-function loop(center: LatLng, dx: number, dy: number, offset: number): LatLng[] {
-  const [lat, lng] = center
-  const corners: LatLng[] = [
-    [lat + dy, lng - dx],
-    [lat + dy, lng + dx],
-    [lat - dy, lng + dx],
-    [lat - dy, lng - dx],
-  ]
-  const start = offset % corners.length
-  const ordered = [...corners.slice(start), ...corners.slice(0, start)]
-  return [...ordered, ordered[0]]
-}
-
-const TRUCK_ROUTES: LatLng[][] = [
-  loop([mapCenter[0] + 0.022, mapCenter[1] - 0.018], 0.038, 0.026, 0),
-  loop([mapCenter[0] - 0.014, mapCenter[1] + 0.03], 0.03, 0.02, 1),
-  loop([mapCenter[0] + 0.036, mapCenter[1] + 0.04], 0.026, 0.032, 2),
-  loop([mapCenter[0] - 0.03, mapCenter[1] - 0.03], 0.028, 0.022, 3),
-  loop([mapCenter[0] + 0.006, mapCenter[1] + 0.06], 0.02, 0.018, 1),
+// Rough waypoint pairs near the map center — OSRM snaps these to the real
+// street network and returns a road-following path between them.
+const TRUCK_WAYPOINTS: [LatLng, LatLng][] = [
+  [
+    [mapCenter[0] + 0.05, mapCenter[1] - 0.06],
+    [mapCenter[0] - 0.015, mapCenter[1] + 0.02],
+  ],
+  [
+    [mapCenter[0] - 0.045, mapCenter[1] - 0.03],
+    [mapCenter[0] + 0.02, mapCenter[1] + 0.045],
+  ],
+  [
+    [mapCenter[0] + 0.055, mapCenter[1] + 0.03],
+    [mapCenter[0] - 0.02, mapCenter[1] - 0.045],
+  ],
+  [
+    [mapCenter[0] - 0.055, mapCenter[1] + 0.05],
+    [mapCenter[0] + 0.03, mapCenter[1] - 0.02],
+  ],
+  [
+    [mapCenter[0] + 0.01, mapCenter[1] - 0.07],
+    [mapCenter[0] - 0.03, mapCenter[1] + 0.04],
+  ],
 ]
 
-const TRUCK_LOOP_SECONDS = [42, 34, 50, 30, 38]
+// City-driving pace, slowed 60% from the original ~6.2 m/s pass.
+const TRUCK_SPEED_MPS = 2.5
 
-function segmentDistance(a: LatLng, b: LatLng) {
-  const dLat = b[0] - a[0]
-  const dLng = b[1] - a[1]
-  return Math.sqrt(dLat * dLat + dLng * dLng)
+async function fetchRoadRoute([a, b]: [LatLng, LatLng]): Promise<LatLng[] | null> {
+  const coords = `${a[1]},${a[0]};${b[1]},${b[0]}`
+  try {
+    const res = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
+    )
+    if (!res.ok) return null
+    const data = await res.json()
+    const geo = data?.routes?.[0]?.geometry?.coordinates as [number, number][] | undefined
+    if (!geo || geo.length < 2) return null
+    return geo.map(([lng, lat]) => [lat, lng] as LatLng)
+  } catch {
+    return null
+  }
 }
 
-function routeLength(route: LatLng[]) {
+function segmentMeters(a: LatLng, b: LatLng) {
+  return L.latLng(a).distanceTo(L.latLng(b))
+}
+
+function routeMeters(route: LatLng[]) {
   let total = 0
-  for (let i = 0; i < route.length - 1; i++) total += segmentDistance(route[i], route[i + 1])
+  for (let i = 0; i < route.length - 1; i++) total += segmentMeters(route[i], route[i + 1])
   return total
 }
 
-const ROUTE_LENGTHS = TRUCK_ROUTES.map(routeLength)
+function bearing(a: LatLng, b: LatLng) {
+  const lat1 = (a[0] * Math.PI) / 180
+  const lat2 = (b[0] * Math.PI) / 180
+  const dLng = ((b[1] - a[1]) * Math.PI) / 180
+  const y = Math.sin(dLng) * Math.cos(lat2)
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng)
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360
+}
 
-function pointOnRoute(route: LatLng[], totalLength: number, frac: number) {
-  let target = (((frac % 1) + 1) % 1) * totalLength
+function pointAtFraction(route: LatLng[], totalMeters: number, frac: number) {
+  let target = Math.max(0, Math.min(1, frac)) * totalMeters
   for (let i = 0; i < route.length - 1; i++) {
     const a = route[i]
     const b = route[i + 1]
-    const segLen = segmentDistance(a, b)
+    const segLen = segmentMeters(a, b)
     if (target <= segLen || i === route.length - 2) {
       const t = segLen === 0 ? 0 : target / segLen
       const position: LatLng = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
-      const heading = (Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI
-      return { position, heading }
+      return { position, heading: bearing(a, b) }
     }
     target -= segLen
   }
@@ -72,24 +97,61 @@ function useElapsedSeconds(intervalMs: number) {
 }
 
 function truckDivIcon(heading: number, status: string) {
-  const color = status === 'collecting' ? '#02e6ff' : status === 'en-route' ? '#ffc710' : '#8e8e8e'
+  const color = status === 'collecting' ? '#02e6ff' : status === 'en-route' ? '#ffc710' : '#c9c9c9'
   return L.divIcon({
     className: '',
-    html: `<div style="transform: rotate(${heading}deg); width:22px; height:22px; display:flex; align-items:center; justify-content:center; background:${color}; border-radius:6px; box-shadow:0 0 0 3px rgba(0,0,0,0.35);">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5"><path d="M12 2 L19 20 L12 16 L5 20 Z"/></svg>
-    </div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
+    html: `
+      <div style="width:30px; height:30px; display:flex; align-items:center; justify-content:center; transform: rotate(${heading}deg); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.55));">
+        <svg width="22" height="30" viewBox="0 0 22 30" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="10.5" width="20" height="18.5" rx="3" fill="${color}" stroke="#0b0b0b" stroke-width="1.2" />
+          <rect x="4" y="14" width="14" height="6.5" rx="1.4" fill="#0b0b0b" opacity="0.28" />
+          <path d="M2.5 10.5 L11 1 L19.5 10.5 Z" fill="${color}" stroke="#0b0b0b" stroke-width="1.2" stroke-linejoin="round" />
+          <path d="M6.3 8.6 L11 3.7 L15.7 8.6 Z" fill="#0b0b0b" opacity="0.32" />
+        </svg>
+      </div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
   })
 }
 
+function PinchOnlyZoom() {
+  const map = useMap()
+  useEffect(() => {
+    const container = map.getContainer()
+    function onWheel(e: WheelEvent) {
+      if (!e.ctrlKey) return
+      e.preventDefault()
+      const nextZoom = map.getZoom() - e.deltaY * 0.015
+      map.setZoom(nextZoom, { animate: false })
+    }
+    container.addEventListener('wheel', onWheel, { passive: false })
+    return () => container.removeEventListener('wheel', onWheel)
+  }, [map])
+  return null
+}
+
 function ZoomControls() {
+  const map = useMap()
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!ref.current) return
+    L.DomEvent.disableClickPropagation(ref.current)
+    L.DomEvent.disableScrollPropagation(ref.current)
+  }, [])
+
   return (
-    <div className="absolute right-4 top-4 z-[500] flex gap-2 rounded-xl bg-black/40 p-1 backdrop-blur-sm">
-      <button className="flex size-7 items-center justify-center rounded-lg text-white/80 hover:bg-white/10">
+    <div ref={ref} className="absolute right-4 top-4 z-[500] flex gap-2 rounded-xl bg-black/40 p-1 backdrop-blur-sm">
+      <button
+        onClick={() => map.zoomIn()}
+        className="flex size-7 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
+      >
         <ZoomIn size={16} />
       </button>
-      <button className="flex size-7 items-center justify-center rounded-lg text-white/80 hover:bg-white/10">
+      <button
+        onClick={() => map.zoomOut()}
+        className="flex size-7 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
+      >
         <ZoomOut size={16} />
       </button>
     </div>
@@ -104,18 +166,44 @@ const SITE_PULSE_PERIOD = 3.2
 const SITE_PULSE_BASE = 35
 const SITE_PULSE_MAX = 230
 
+interface TruckRoute {
+  path: LatLng[]
+  totalMeters: number
+}
+
 export function DeliveryMap() {
   const elapsed = useElapsedSeconds(120)
+  const [routes, setRoutes] = useState<(TruckRoute | null)[]>(() => TRUCK_WAYPOINTS.map(() => null))
 
-  const animatedTrucks = trucks.map((truck, i) => {
-    const route = TRUCK_ROUTES[i % TRUCK_ROUTES.length]
-    const total = ROUTE_LENGTHS[i % TRUCK_ROUTES.length]
-    const duration = TRUCK_LOOP_SECONDS[i % TRUCK_LOOP_SECONDS.length]
-    const { position, heading } = pointOnRoute(route, total, elapsed / duration)
-    const beamColor = truck.status === 'collecting' ? '#02e6ff' : truck.status === 'en-route' ? '#ffc710' : '#8e8e8e'
+  useEffect(() => {
+    let cancelled = false
+    Promise.all(TRUCK_WAYPOINTS.map(fetchRoadRoute)).then((results) => {
+      if (cancelled) return
+      setRoutes(
+        results.map((path) => (path ? { path, totalMeters: routeMeters(path) } : null)),
+      )
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
-    return { truck, position, heading, beamColor, phase: (i * 0.45) % TRUCK_BEAM_PERIOD }
-  })
+  const animatedTrucks = trucks
+    .map((truck, i) => {
+      const route = routes[i % routes.length]
+      if (!route) return null
+
+      const oneWaySeconds = route.totalMeters / TRUCK_SPEED_MPS
+      const cycle = elapsed % (oneWaySeconds * 2)
+      const forward = cycle <= oneWaySeconds
+      const frac = forward ? cycle / oneWaySeconds : 1 - (cycle - oneWaySeconds) / oneWaySeconds
+      const { position, heading } = pointAtFraction(route.path, route.totalMeters, frac)
+      const finalHeading = forward ? heading : (heading + 180) % 360
+      const beamColor = truck.status === 'collecting' ? '#02e6ff' : truck.status === 'en-route' ? '#ffc710' : '#8e8e8e'
+
+      return { truck, position, heading: finalHeading, beamColor, phase: (i * 0.45) % TRUCK_BEAM_PERIOD }
+    })
+    .filter((t): t is NonNullable<typeof t> => t !== null)
 
   return (
     <div className="relative h-[400px] w-full overflow-hidden rounded-t-lg border border-border">
@@ -131,16 +219,20 @@ export function DeliveryMap() {
         </div>
       </div>
 
-      <ZoomControls />
-
       <MapContainer
         center={mapCenter}
         zoom={12}
         zoomControl={false}
-        scrollWheelZoom
+        scrollWheelZoom={false}
+        doubleClickZoom={false}
+        boxZoom={false}
+        touchZoom
         className="h-full w-full dark-map"
         style={{ background: '#151515' }}
       >
+        <PinchOnlyZoom />
+        <ZoomControls />
+
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
