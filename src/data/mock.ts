@@ -158,6 +158,22 @@ const DRIVER_NAMES = [
 
 const CAPACITIES = ['12 yd³', '14 yd³', '16 yd³', '17 yd³']
 
+// Real garbage/waste-collection truck photos (Wikimedia Commons, served via
+// the stable Special:FilePath redirect so no upload-URL churn).
+const TRUCK_PHOTOS = [
+  'US_Garbage_Truck.jpg',
+  'NYC_Sanitation_Garbage_Truck_(46018980825).jpg',
+  'Garbage_truck.png',
+  'Abandoned_KMC_garbage_truck.jpg',
+  'ACT_ASL_garbage_truck.jpg',
+  'Recology_Lodal_Garbage_Truck_14425_in_San_Francisco.jpg',
+  'Naha_Okinawa_Japan_Garbage-truck-01.jpg',
+  'Mack_MR_Leach_2rII_Garbage_Truck_(15808528062).jpg',
+  'Nissan_UD90_garbage_truck_(16194191110).jpg',
+  'Republic_Services_waste_collection_truck.jpg',
+  'Bunbury_waste_disposal_truck.jpg',
+].map((name) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(name)}?width=300`)
+
 export const truckCards: TruckCard[] = Array.from({ length: 16 }, (_, i) => {
   const tagPrefix = ['RES-12 • TAX-1234', 'RES-Ab • OMO-2234', 'RES-32 • TAX-3455', 'RES-62 • VDS-1345', 'RES-91 • KKQ-5432'][
     i % 5
@@ -171,7 +187,7 @@ export const truckCards: TruckCard[] = Array.from({ length: 16 }, (_, i) => {
     odometer: `${(123 + i * 3).toLocaleString()},458 km`,
     driverName: DRIVER_NAMES[i % DRIVER_NAMES.length],
     driverAvatar: `https://i.pravatar.cc/64?img=${(i % 70) + 1}`,
-    photo: `https://picsum.photos/seed/truck-${i + 1}/200/200`,
+    photo: TRUCK_PHOTOS[i % TRUCK_PHOTOS.length],
   }
 })
 
