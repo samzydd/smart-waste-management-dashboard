@@ -1,0 +1,67 @@
+@import 'tailwindcss';
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  --color-bg: #111111;
+  --color-bg-raised: #1a1a1a;
+  --color-bg-sunken: #0c0c0c;
+  --color-border: #222325;
+  --color-border-strong: #212022;
+
+  --color-text-primary: #efeef1;
+  --color-text-secondary: #aaaaac;
+  --color-text-tertiary: #8e8e8e;
+  --color-text-muted: #7d7d7d;
+  --color-text-body: #dadadd;
+
+  --color-accent: #02e6ff;
+  --color-accent-soft: #5defff;
+  --color-accent-bg: rgba(2, 129, 143, 0.28);
+
+  --color-status-green: #008428;
+  --color-status-amber: #927000;
+  --color-status-empty: #00a733;
+  --color-status-filled: #ffc710;
+
+  --color-waste-metal: #347efb;
+  --color-waste-plastic: #9157ff;
+  --color-waste-electronic: #b998fe;
+  --color-waste-paper: #ffbd3b;
+  --color-waste-other: #f55540;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text-body);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.dark-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.65) contrast(1.15) saturate(0.7);
+}
+
+.dark-map .leaflet-popup-content-wrapper,
+.dark-map .leaflet-popup-tip {
+  background: var(--color-bg-raised);
+  color: var(--color-text-body);
+}
+
+.leaflet-container {
+  background: #151515 !important;
+  font-family: var(--font-sans);
+}
