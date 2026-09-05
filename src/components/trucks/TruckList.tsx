@@ -1,6 +1,7 @@
-import { ChevronDownIcon, EllipsisVerticalIcon } from '@heroicons/react/24/solid'
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid'
 import { truckCards } from '../../data/mock'
 import type { TruckCardStatus } from '../../types'
+import { DriverPicker } from './DriverPicker'
 
 const statusStyles: Record<TruckCardStatus, { label: string; className: string }> = {
   'in-field': { label: 'In Field', className: 'bg-[#1f9d55] text-white' },
@@ -47,12 +48,8 @@ export function TruckList() {
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
-            <span className="text-sm text-text-tertiary">Driver</span>
-            <button className="flex items-center gap-2 rounded-lg border border-border bg-bg px-2 py-1.5 hover:bg-white/5">
-              <img src={truck.driverAvatar} alt="" className="size-6 rounded-full object-cover" />
-              <span className="whitespace-nowrap text-sm text-text-primary">{truck.driverName}</span>
-              <ChevronDownIcon className="size-4 text-text-tertiary" />
-            </button>
+            <span className="w-12 shrink-0 text-sm text-text-tertiary">Driver</span>
+            <DriverPicker initialDriver={{ name: truck.driverName, avatar: truck.driverAvatar }} />
           </div>
 
           <button className="flex shrink-0 items-center justify-center rounded-md p-1 text-text-tertiary hover:bg-white/10 hover:text-text-secondary">

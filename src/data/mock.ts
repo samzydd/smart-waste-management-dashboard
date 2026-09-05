@@ -158,6 +158,11 @@ const DRIVER_NAMES = [
 
 const CAPACITIES = ['12 yd³', '14 yd³', '16 yd³', '17 yd³']
 
+export const drivers = DRIVER_NAMES.map((name, i) => ({
+  name,
+  avatar: `https://i.pravatar.cc/64?img=${(i % 70) + 1}`,
+}))
+
 // Real garbage/waste-collection truck photos (Wikimedia Commons, served via
 // the stable Special:FilePath redirect so no upload-URL churn).
 const TRUCK_PHOTOS = [
