@@ -33,53 +33,55 @@ function FilterPill({ label }: { label: string }) {
 
 export function BinTable() {
   return (
-    <div className="flex w-full flex-col items-start overflow-hidden rounded-t-xl border border-border bg-bg">
-      <div className="flex w-full items-center gap-6 border-b border-border bg-black/25 p-4">
+    <div className="flex min-h-0 w-full flex-1 flex-col items-start overflow-hidden rounded-t-xl border border-border bg-bg">
+      <div className="flex w-full shrink-0 items-center gap-6 border-b border-border bg-black/25 p-4">
         <FilterPill label="Sort by" />
         <FilterPill label="Show" />
       </div>
 
-      <div className="flex w-full items-center justify-between pb-0.5 pt-2">
-        {columns.map((c) => (
-          <div key={c.key} className={`flex items-center px-3 py-1.5 ${c.width}`}>
-            <p className="whitespace-nowrap text-sm font-medium text-text-muted">{c.label}</p>
+      <div className="min-h-0 w-full flex-1 overflow-y-auto">
+        <div className="sticky top-0 z-10 flex w-full items-center justify-between border-b border-border bg-bg pb-0.5 pt-2">
+          {columns.map((c) => (
+            <div key={c.key} className={`flex items-center px-3 py-1.5 ${c.width}`}>
+              <p className="whitespace-nowrap text-sm font-medium text-text-muted">{c.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {binRecords.map((record) => (
+          <div
+            key={record.id}
+            className="flex w-full items-center justify-between border-t border-border bg-bg transition-colors hover:bg-[#171717]"
+          >
+            <div className="flex h-[54px] w-[330px] items-center pl-4 pr-3 py-1.5">
+              <p className="truncate text-sm text-text-body">{record.area}</p>
+            </div>
+            <div className="flex h-[54px] w-36 items-center px-3 py-1.5">
+              <span className="flex items-center gap-1 text-sm text-text-body">
+                <span className={`size-2 rounded-full ${reportStyles[record.report].dot}`} />
+                {reportStyles[record.report].label}
+              </span>
+            </div>
+            <div className="flex h-[54px] w-[110px] items-center justify-center px-3 py-1.5">
+              <p className="text-sm text-text-body">{record.estWeight}</p>
+            </div>
+            <div className="flex h-[54px] w-[200px] items-center px-3 py-1.5">
+              <p className="whitespace-nowrap text-sm text-text-body">{record.truckAssigned}</p>
+            </div>
+            <div className="flex h-[54px] flex-1 items-center px-3 py-1.5">
+              <p className="whitespace-nowrap text-sm text-text-body">{record.departure}</p>
+            </div>
+            <div className="flex h-[54px] flex-1 items-center px-3 py-1.5">
+              <p className="whitespace-nowrap text-sm text-text-body">{record.eta}</p>
+            </div>
+            <div className="flex h-[54px] w-11 items-center justify-center px-3 py-1.5">
+              <button className="flex items-center justify-center rounded-md p-1 text-text-tertiary hover:bg-white/10 hover:text-text-secondary">
+                <EllipsisVerticalIcon className="size-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
-
-      {binRecords.map((record) => (
-        <div
-          key={record.id}
-          className="flex w-full items-center justify-between border-t border-border bg-bg transition-colors hover:bg-[#171717]"
-        >
-          <div className="flex h-[54px] w-[330px] items-center pl-4 pr-3 py-1.5">
-            <p className="truncate text-sm text-text-body">{record.area}</p>
-          </div>
-          <div className="flex h-[54px] w-36 items-center px-3 py-1.5">
-            <span className="flex items-center gap-1 text-sm text-text-body">
-              <span className={`size-2 rounded-full ${reportStyles[record.report].dot}`} />
-              {reportStyles[record.report].label}
-            </span>
-          </div>
-          <div className="flex h-[54px] w-[110px] items-center justify-center px-3 py-1.5">
-            <p className="text-sm text-text-body">{record.estWeight}</p>
-          </div>
-          <div className="flex h-[54px] w-[200px] items-center px-3 py-1.5">
-            <p className="whitespace-nowrap text-sm text-text-body">{record.truckAssigned}</p>
-          </div>
-          <div className="flex h-[54px] flex-1 items-center px-3 py-1.5">
-            <p className="whitespace-nowrap text-sm text-text-body">{record.departure}</p>
-          </div>
-          <div className="flex h-[54px] flex-1 items-center px-3 py-1.5">
-            <p className="whitespace-nowrap text-sm text-text-body">{record.eta}</p>
-          </div>
-          <div className="flex h-[54px] w-11 items-center justify-center px-3 py-1.5">
-            <button className="flex items-center justify-center rounded-md p-1 text-text-tertiary hover:bg-white/10 hover:text-text-secondary">
-              <EllipsisVerticalIcon className="size-4" />
-            </button>
-          </div>
-        </div>
-      ))}
     </div>
   )
 }
