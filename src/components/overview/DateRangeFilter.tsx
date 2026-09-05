@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CalendarIcon, ChevronDownIcon } from '@heroicons/react/24/solid'
+import { CalendarIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid'
 import { DayPicker, type DateRange } from 'react-day-picker'
 import 'react-day-picker/style.css'
 
@@ -71,7 +71,7 @@ export function DateRangeFilter() {
           className="flex items-center gap-2 rounded-l-lg border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-white/5"
         >
           {preset}
-          <ChevronDownIcon className="size-5" />
+          {presetOpen ? <ChevronUpIcon className="size-5" /> : <ChevronDownIcon className="size-5" />}
         </button>
         {presetOpen && (
           <div className="absolute left-0 top-full z-[600] mt-2 w-44 overflow-hidden rounded-lg border border-border bg-bg-raised py-1 shadow-xl">
@@ -104,7 +104,7 @@ export function DateRangeFilter() {
             <span className="inline-block h-px w-2 bg-text-secondary" />
             {range.to ? fmt(range.to) : '—'}
           </span>
-          <ChevronDownIcon className="size-5" />
+          {calendarOpen ? <ChevronUpIcon className="size-5" /> : <ChevronDownIcon className="size-5" />}
         </button>
         {calendarOpen && (
           <div className="dark-daypicker absolute left-0 top-full z-[600] mt-2 w-max rounded-lg border border-border bg-bg-raised p-2 shadow-xl">

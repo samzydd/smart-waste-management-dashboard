@@ -6,13 +6,13 @@ function jitter(base: number, spread: number) {
   return base + (Math.random() - 0.5) * spread
 }
 
-export const bins: Bin[] = Array.from({ length: 26 }, (_, i) => {
+export const bins: Bin[] = Array.from({ length: 48 }, (_, i) => {
   const status = Math.random() > 0.75 ? 'filled' : Math.random() > 0.5 ? 'partial' : 'empty'
   return {
     id: `bin-${i + 1}`,
     label: `Bin ${String(i + 1).padStart(3, '0')}`,
-    lat: jitter(CENTER[0], 0.09),
-    lng: jitter(CENTER[1], 0.12),
+    lat: jitter(CENTER[0], 0.16),
+    lng: jitter(CENTER[1], 0.2),
     fillLevel: status === 'filled' ? 80 + Math.round(Math.random() * 20) : status === 'partial' ? 30 + Math.round(Math.random() * 40) : Math.round(Math.random() * 20),
     wasteType: (['recyclable', 'organic', 'landfill'] as const)[i % 3],
     status,
@@ -20,11 +20,11 @@ export const bins: Bin[] = Array.from({ length: 26 }, (_, i) => {
   }
 })
 
-export const trucks: Truck[] = Array.from({ length: 5 }, (_, i) => ({
+export const trucks: Truck[] = Array.from({ length: 10 }, (_, i) => ({
   id: `truck-${i + 1}`,
   label: `Truck ${String(i + 1).padStart(2, '0')}`,
-  lat: jitter(CENTER[0], 0.09),
-  lng: jitter(CENTER[1], 0.12),
+  lat: jitter(CENTER[0], 0.16),
+  lng: jitter(CENTER[1], 0.2),
   heading: Math.round(Math.random() * 360),
   status: (['idle', 'en-route', 'collecting'] as const)[i % 3],
   routeId: `route-${i + 1}`,

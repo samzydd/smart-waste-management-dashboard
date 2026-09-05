@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { MagnifyingGlassPlusIcon, MagnifyingGlassMinusIcon, TruckIcon } from '@heroicons/react/24/solid'
@@ -7,28 +7,50 @@ import 'leaflet/dist/leaflet.css'
 
 type LatLng = [number, number]
 
-// Rough waypoint pairs near the map center — OSRM snaps these to the real
-// street network and returns a road-following path between them.
+// Rough waypoint pairs spread wide around the map center — OSRM snaps
+// these to the real street network and returns a road-following path
+// between them. One pair per truck, fanned out in different directions
+// so the fleet reads as covering the whole service area, not clustered.
 const TRUCK_WAYPOINTS: [LatLng, LatLng][] = [
   [
-    [mapCenter[0] + 0.05, mapCenter[1] - 0.06],
-    [mapCenter[0] - 0.015, mapCenter[1] + 0.02],
+    [mapCenter[0] + 0.09, mapCenter[1] - 0.1],
+    [mapCenter[0] - 0.02, mapCenter[1] + 0.03],
   ],
   [
-    [mapCenter[0] - 0.045, mapCenter[1] - 0.03],
-    [mapCenter[0] + 0.02, mapCenter[1] + 0.045],
+    [mapCenter[0] - 0.08, mapCenter[1] - 0.06],
+    [mapCenter[0] + 0.03, mapCenter[1] + 0.08],
   ],
   [
-    [mapCenter[0] + 0.055, mapCenter[1] + 0.03],
-    [mapCenter[0] - 0.02, mapCenter[1] - 0.045],
+    [mapCenter[0] + 0.1, mapCenter[1] + 0.05],
+    [mapCenter[0] - 0.03, mapCenter[1] - 0.08],
   ],
   [
-    [mapCenter[0] - 0.055, mapCenter[1] + 0.05],
-    [mapCenter[0] + 0.03, mapCenter[1] - 0.02],
+    [mapCenter[0] - 0.1, mapCenter[1] + 0.09],
+    [mapCenter[0] + 0.05, mapCenter[1] - 0.03],
   ],
   [
-    [mapCenter[0] + 0.01, mapCenter[1] - 0.07],
-    [mapCenter[0] - 0.03, mapCenter[1] + 0.04],
+    [mapCenter[0] + 0.02, mapCenter[1] - 0.13],
+    [mapCenter[0] - 0.06, mapCenter[1] + 0.07],
+  ],
+  [
+    [mapCenter[0] - 0.13, mapCenter[1] - 0.02],
+    [mapCenter[0] + 0.07, mapCenter[1] + 0.11],
+  ],
+  [
+    [mapCenter[0] + 0.11, mapCenter[1] + 0.12],
+    [mapCenter[0] - 0.07, mapCenter[1] - 0.11],
+  ],
+  [
+    [mapCenter[0] - 0.11, mapCenter[1] - 0.12],
+    [mapCenter[0] + 0.08, mapCenter[1] + 0.02],
+  ],
+  [
+    [mapCenter[0] + 0.04, mapCenter[1] + 0.14],
+    [mapCenter[0] - 0.09, mapCenter[1] - 0.04],
+  ],
+  [
+    [mapCenter[0] - 0.04, mapCenter[1] - 0.14],
+    [mapCenter[0] + 0.09, mapCenter[1] + 0.04],
   ],
 ]
 
@@ -176,7 +198,10 @@ function ZoomControls() {
   }, [])
 
   return (
-    <div ref={ref} className="absolute right-4 top-4 z-[500] flex gap-2 rounded-xl bg-black/40 p-1 backdrop-blur-sm">
+    <div
+      ref={ref}
+      className="absolute right-4 top-4 z-[500] flex gap-2 rounded-xl border border-white/15 bg-white/10 p-1 shadow-lg backdrop-blur-md backdrop-saturate-150"
+    >
       <button
         onClick={() => map.zoomIn()}
         className="flex size-7 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"
@@ -197,6 +222,12 @@ const TRUCK_BEAM_PERIOD = 2.4
 const TRUCK_BEAM_BASE = 70
 const TRUCK_BEAM_MAX = 620
 
+// Two trucks whose radials are this close are considered "colliding".
+const COLLISION_DISTANCE_M = 320
+// How long a collision has to persist before we reroute one truck away.
+const REDIRECT_AFTER_S = 4
+const COLLISION_BLINK_HZ = 4
+
 const SITE_PULSE_PERIOD = 3.2
 const SITE_PULSE_BASE = 35
 const SITE_PULSE_MAX = 230
@@ -209,6 +240,10 @@ interface TruckRoute {
 export function DeliveryMap() {
   const elapsed = useElapsedSeconds(120)
   const [routes, setRoutes] = useState<(TruckRoute | null)[]>(() => TRUCK_WAYPOINTS.map(() => null))
+  const [routeAssignment, setRouteAssignment] = useState<number[]>(() =>
+    trucks.map((_, i) => i % TRUCK_WAYPOINTS.length),
+  )
+  const collisionSinceRef = useRef<Map<string, number>>(new Map())
 
   useEffect(() => {
     let cancelled = false
@@ -223,26 +258,77 @@ export function DeliveryMap() {
     }
   }, [])
 
-  const animatedTrucks = trucks
-    .map((truck, i) => {
-      const route = routes[i % routes.length]
-      if (!route) return null
+  const animatedTrucks = useMemo(
+    () =>
+      trucks
+        .map((truck, i) => {
+          const route = routes[routeAssignment[i] % routes.length]
+          if (!route) return null
 
-      const oneWaySeconds = route.totalMeters / TRUCK_SPEED_MPS
-      const cycle = elapsed % (oneWaySeconds * 2)
-      const forward = cycle <= oneWaySeconds
-      const frac = forward ? cycle / oneWaySeconds : 1 - (cycle - oneWaySeconds) / oneWaySeconds
-      const { position, heading } = pointAtFraction(route.path, route.totalMeters, frac)
-      const finalHeading = forward ? heading : (heading + 180) % 360
-      const beamColor = truck.status === 'collecting' ? '#02e6ff' : truck.status === 'en-route' ? '#ffc710' : '#8e8e8e'
+          const oneWaySeconds = route.totalMeters / TRUCK_SPEED_MPS
+          const cycle = elapsed % (oneWaySeconds * 2)
+          const forward = cycle <= oneWaySeconds
+          const frac = forward ? cycle / oneWaySeconds : 1 - (cycle - oneWaySeconds) / oneWaySeconds
+          const { position, heading } = pointAtFraction(route.path, route.totalMeters, frac)
+          const finalHeading = forward ? heading : (heading + 180) % 360
+          const beamColor =
+            truck.status === 'collecting' ? '#02e6ff' : truck.status === 'en-route' ? '#ffc710' : '#8e8e8e'
 
-      return { truck, position, heading: finalHeading, beamColor, phase: (i * 0.45) % TRUCK_BEAM_PERIOD }
-    })
-    .filter((t): t is NonNullable<typeof t> => t !== null)
+          return { truck, position, heading: finalHeading, beamColor, phase: (i * 0.45) % TRUCK_BEAM_PERIOD }
+        })
+        .filter((t): t is NonNullable<typeof t> => t !== null),
+    [elapsed, routes, routeAssignment],
+  )
+
+  const collidingIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (let i = 0; i < animatedTrucks.length; i++) {
+      for (let j = i + 1; j < animatedTrucks.length; j++) {
+        const a = animatedTrucks[i]
+        const b = animatedTrucks[j]
+        if (L.latLng(a.position).distanceTo(b.position) < COLLISION_DISTANCE_M) {
+          ids.add(a.truck.id)
+          ids.add(b.truck.id)
+        }
+      }
+    }
+    return ids
+  }, [animatedTrucks])
+
+  // If two trucks' radials stay overlapped past REDIRECT_AFTER_S, send the
+  // second one off onto a different route so they stop running into each other.
+  useEffect(() => {
+    const stillColliding = new Set<string>()
+    for (let i = 0; i < animatedTrucks.length; i++) {
+      for (let j = i + 1; j < animatedTrucks.length; j++) {
+        const a = animatedTrucks[i]
+        const b = animatedTrucks[j]
+        if (L.latLng(a.position).distanceTo(b.position) >= COLLISION_DISTANCE_M) continue
+
+        const key = [a.truck.id, b.truck.id].sort().join('|')
+        stillColliding.add(key)
+        const since = collisionSinceRef.current.get(key)
+        if (since === undefined) {
+          collisionSinceRef.current.set(key, elapsed)
+        } else if (elapsed - since > REDIRECT_AFTER_S && routes.length > 1) {
+          const truckIndex = trucks.findIndex((t) => t.id === b.truck.id)
+          setRouteAssignment((prev) => {
+            const next = [...prev]
+            next[truckIndex] = (next[truckIndex] + 1) % routes.length
+            return next
+          })
+          collisionSinceRef.current.delete(key)
+        }
+      }
+    }
+    for (const key of collisionSinceRef.current.keys()) {
+      if (!stillColliding.has(key)) collisionSinceRef.current.delete(key)
+    }
+  }, [animatedTrucks, elapsed, routes.length])
 
   return (
     <div className="relative h-[400px] w-full overflow-hidden rounded-t-lg border border-border">
-      <div className="absolute left-4 top-4 z-[500] flex items-center gap-4 rounded-xl bg-black/50 px-3 py-1.5 backdrop-blur-sm">
+      <div className="absolute left-4 top-4 z-[500] flex items-center gap-4 rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 shadow-lg backdrop-blur-md backdrop-saturate-150">
         <p className="text-base font-medium text-white">Delivery Activities</p>
         <div className="flex items-center gap-4 text-xs font-medium text-white">
           <span className="flex items-center gap-1">
@@ -309,6 +395,9 @@ export function DeliveryMap() {
         {animatedTrucks.map(({ truck, position, heading, beamColor, phase }) => {
           const beamPhase = (((elapsed + phase) % TRUCK_BEAM_PERIOD) / TRUCK_BEAM_PERIOD)
           const beamPhase2 = (((elapsed + phase + TRUCK_BEAM_PERIOD / 2) % TRUCK_BEAM_PERIOD) / TRUCK_BEAM_PERIOD)
+          const isColliding = collidingIds.has(truck.id)
+          const blinkOn = Math.floor(elapsed * COLLISION_BLINK_HZ) % 2 === 0
+          const ringColor = isColliding ? (blinkOn ? '#ff2d2d' : '#7a0000') : beamColor
 
           return (
             <Fragment key={truck.id}>
@@ -318,11 +407,11 @@ export function DeliveryMap() {
                   center={position}
                   radius={TRUCK_BEAM_BASE + p * TRUCK_BEAM_MAX}
                   pathOptions={{
-                    color: beamColor,
-                    weight: 1.5,
-                    fillColor: beamColor,
-                    fillOpacity: (1 - p) * 0.18,
-                    opacity: (1 - p) * 0.55,
+                    color: ringColor,
+                    weight: isColliding ? 2.5 : 1.5,
+                    fillColor: ringColor,
+                    fillOpacity: isColliding ? (1 - p) * 0.35 : (1 - p) * 0.18,
+                    opacity: isColliding ? (1 - p) * 0.85 : (1 - p) * 0.55,
                   }}
                 />
               ))}
