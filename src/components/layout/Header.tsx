@@ -7,7 +7,7 @@ interface HeaderProps {
 
 export function Header({ title, action }: HeaderProps) {
   return (
-    <header className="flex items-center gap-1 border-b border-border bg-bg px-5 py-3.5">
+    <header className="flex h-16 shrink-0 items-center gap-1 border-b border-border bg-bg px-5">
       <div className="flex flex-1 items-center gap-2">
         <div className="flex items-center justify-center rounded-lg border border-border p-1.5">
           <LayoutDashboard size={16} className="text-text-tertiary" />

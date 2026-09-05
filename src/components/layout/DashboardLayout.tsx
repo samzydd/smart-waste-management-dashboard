@@ -12,9 +12,9 @@ export function DashboardLayout({ title, action, children }: DashboardLayoutProp
   return (
     <div className="flex h-screen w-full items-start justify-between bg-bg">
       <Sidebar />
-      <div className="flex h-full flex-1 flex-col overflow-y-auto">
+      <div className="flex h-full flex-1 flex-col overflow-hidden">
         <Header title={title} action={action} />
-        <main className="flex flex-1 flex-col gap-5 p-5">{children}</main>
+        <main className="flex flex-1 flex-col gap-5 overflow-y-auto p-5">{children}</main>
       </div>
     </div>
   )
