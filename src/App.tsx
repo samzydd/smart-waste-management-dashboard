@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Overview } from './pages/Overview'
+import { BinStatus } from './pages/BinStatus'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
 function App() {
@@ -7,15 +8,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Overview />} />
-        <Route
-          path="/bin-status"
-          element={
-            <PlaceholderPage
-              title="Bin status"
-              description="Real-time fill levels and waste-type breakdown for every sensor-equipped bin in the network."
-            />
-          }
-        />
+        <Route path="/bin-status" element={<BinStatus />} />
         <Route
           path="/trucks"
           element={

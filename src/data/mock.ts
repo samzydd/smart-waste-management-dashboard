@@ -1,4 +1,4 @@
-import type { Bin, Delivery, Truck } from '../types'
+import type { Bin, BinFillReport, BinRecord, Delivery, Truck } from '../types'
 
 const CENTER: [number, number] = [38.8339, -104.8214]
 
@@ -77,6 +77,37 @@ export const deliveries: Delivery[] = [
     eta: '12 Oct, 14:35PM',
   },
 ]
+
+const AREAS = [
+  '2464 Royal Ln. Mesa, New Jersey 45463',
+  '3891 Ranchview Dr. Richardson, California 62639',
+  '2972 Westheimer Rd. Santa Ana, Illinois 85486',
+  '1901 Thornridge Cir. Shiloh, Hawaii 81063',
+  '3517 W. Gray St. Utica, Pennsylvania 57867',
+  '2715 Ash Dr. San Jose, South Dakota 83475',
+  '6391 Elgin St. Celina, Delaware 10299',
+  '4140 Parker Rd. Allentown, New Mexico 31134',
+  '2118 Thornridge Cir. Syracuse, Connecticut 35624',
+  '4517 Washington Ave. Manchester, Kentucky 39495',
+  '8502 Preston Rd. Inglewood, Maine 98380',
+  '3605 Parker Rd. Fresno, Ohio 20194',
+]
+
+const REPORTS: BinFillReport[] = ['filled', 'filled', 'almost-filled', 'almost-filled', 'emptied', 'emptied', 'in-progress']
+
+export const binRecords: BinRecord[] = AREAS.map((area, i) => {
+  const report = REPORTS[i % REPORTS.length]
+  const truckTag = `RES-${(i * 7 + 12) % 99} • TAX-${1000 + i * 111}`
+  return {
+    id: `bin-record-${i + 1}`,
+    area,
+    report,
+    estWeight: i === 1 ? 'TBD' : '12 ton',
+    truckAssigned: truckTag,
+    departure: `12 Oct, ${(8 + i) % 12 || 12}:${(i * 7) % 60 < 10 ? '0' : ''}${(i * 7) % 60} ${8 + i < 12 ? 'AM' : 'PM'}`,
+    eta: `12 Oct, ${(13 + i) % 12 || 12}:${(i * 11) % 60 < 10 ? '0' : ''}${(i * 11) % 60} PM`,
+  }
+})
 
 export const wasteBreakdown = [
   { label: 'Metal', pct: 40, color: 'var(--color-waste-metal)' },

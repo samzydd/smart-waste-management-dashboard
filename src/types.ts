@@ -36,3 +36,15 @@ export interface Delivery {
   departure: string
   eta: string
 }
+
+export type BinFillReport = 'filled' | 'almost-filled' | 'emptied' | 'in-progress'
+
+export interface BinRecord {
+  id: string
+  area: string
+  report: BinFillReport
+  estWeight: string
+  truckAssigned: string
+  departure: string
+  eta: string
+}

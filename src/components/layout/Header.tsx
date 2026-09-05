@@ -1,13 +1,19 @@
+import type { ComponentType, SVGProps } from 'react'
 import { Squares2X2Icon, PlusIcon } from '@heroicons/react/24/solid'
-import { OverviewKeyIcon } from '../icons'
+import { OverviewKeyIcon, TrashBinIcon } from '../icons'
 
 interface HeaderProps {
   title: string
   action?: { label: string; onClick?: () => void }
 }
 
+const TITLE_ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+  Overview: OverviewKeyIcon,
+  'Bin status': TrashBinIcon,
+}
+
 export function Header({ title, action }: HeaderProps) {
-  const TitleIcon = title === 'Overview' ? OverviewKeyIcon : Squares2X2Icon
+  const TitleIcon = TITLE_ICONS[title] ?? Squares2X2Icon
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-1 border-b border-border bg-bg px-5">
