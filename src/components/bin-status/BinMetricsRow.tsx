@@ -6,19 +6,44 @@ interface Metric {
   value: string
   caption: string
   icon: ComponentType<SVGProps<SVGSVGElement>>
+  color: string
 }
 
 const metrics: Metric[] = [
-  { label: 'Registered device', value: '12,233', caption: 'Total devices enrolled', icon: AssistantDeviceIcon },
-  { label: 'Total active', value: '10,120', caption: 'Devices online (last 15m)', icon: WifiSolidIcon },
-  { label: 'Un-filled bin', value: '4,112', caption: 'Bins placed in the field', icon: BinEmptyIcon },
-  { label: 'Filled bin', value: '6,008', caption: 'Bins at/above fill threshold', icon: RecycleBinThrowIcon },
+  {
+    label: 'Registered device',
+    value: '12,233',
+    caption: 'Total devices enrolled',
+    icon: AssistantDeviceIcon,
+    color: 'text-accent',
+  },
+  {
+    label: 'Total active',
+    value: '10,120',
+    caption: 'Devices online (last 15m)',
+    icon: WifiSolidIcon,
+    color: 'text-accent',
+  },
+  {
+    label: 'Un-filled bin',
+    value: '4,112',
+    caption: 'Bins placed in the field',
+    icon: BinEmptyIcon,
+    color: 'text-[#f55540]',
+  },
+  {
+    label: 'Filled bin',
+    value: '6,008',
+    caption: 'Bins at/above fill threshold',
+    icon: RecycleBinThrowIcon,
+    color: 'text-[#f55540]',
+  },
 ]
 
 export function BinMetricsRow() {
   return (
     <div className="flex w-full items-center gap-4">
-      {metrics.map(({ label, value, caption, icon: Icon }) => (
+      {metrics.map(({ label, value, caption, icon: Icon, color }) => (
         <div
           key={label}
           className="flex flex-1 items-start gap-1 overflow-hidden rounded-xl border border-border bg-bg-raised px-4 py-3"
@@ -33,7 +58,7 @@ export function BinMetricsRow() {
             </div>
           </div>
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-bg">
-            <Icon className="size-5 text-[#747474]" />
+            <Icon className={`size-5 ${color}`} />
           </div>
         </div>
       ))}
